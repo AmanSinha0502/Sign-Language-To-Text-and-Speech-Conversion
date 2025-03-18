@@ -20,7 +20,7 @@ offset = 29
 os.environ["THEANO_FLAGS"] = "device=cuda, assert_no_cpu_op=True"
 
 class Application:
-    def __init__(self):
+    def _init_(self):
         self.vs = cv2.VideoCapture(0)
         self.current_image = None
         self.model = load_model('cnn8grps_rad1_model.h5')
@@ -29,8 +29,7 @@ class Application:
         voices = self.speak_engine.getProperty("voices")
         self.speak_engine.setProperty("voice", voices[0].id)
 
-        self.ct = {}
-        self.ct['blank'] = 0
+        self.ct = {'blank': 0}
         self.blank_flag = 0
         self.space_flag = False
         self.next_flag = True
@@ -43,76 +42,71 @@ class Application:
         print("Loaded model from disk")
 
         self.root = tk.Tk()
-        self.root.title("Sign Language To Text Conversion")
+        self.root.title("Sign Language To Text")
         self.root.protocol('WM_DELETE_WINDOW', self.destructor)
-        self.root.geometry("1300x700")
+        self.root.geometry("800x500")  # Smaller window size
+        self.root.minsize(600, 400)  # Further reduce minimum size
 
-        # Create a Canvas with a Scrollbar
+        # Create Canvas with Scrollbar
         self.canvas = tk.Canvas(self.root)
         self.scrollbar = ttk.Scrollbar(self.root, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = ttk.Frame(self.canvas)
 
-        self.scrollable_frame.bind(
-            "<Configure>",
-            lambda e: self.canvas.configure(
-                scrollregion=self.canvas.bbox("all")
-            )
-        )
-
+        self.scrollable_frame.bind("<Configure>", lambda e: self.canvas.configure(scrollregion=self.canvas.bbox("all")))
         self.canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
 
         self.canvas.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        # Add your widgets to the scrollable_frame instead of self.root
+        # Reduced padding and font sizes
+        small_font = ("Courier", 12, "bold")
+        button_font = ("Courier", 10)
+
         self.panel = tk.Label(self.scrollable_frame)
-        self.panel.place(x=100, y=3, width=480, height=640)
+        self.panel.grid(row=0, column=0, padx=5, pady=5, sticky="nsew")
 
         self.panel2 = tk.Label(self.scrollable_frame)
-        self.panel2.place(x=700, y=115, width=400, height=400)
+        self.panel2.grid(row=0, column=1, padx=5, pady=5, sticky="nsew")
 
-        self.T = tk.Label(self.scrollable_frame)
-        self.T.place(x=60, y=5)
-        self.T.config(text="Sign Language To Text Conversion", font=("Courier", 30, "bold"))
+        self.T = tk.Label(self.scrollable_frame, text="Sign Language To Text", font=small_font)
+        self.T.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="w")
 
-        self.panel3 = tk.Label(self.scrollable_frame)
-        self.panel3.place(x=280, y=585)
+        self.T1 = tk.Label(self.scrollable_frame, text="Character:", font=small_font)
+        self.T1.grid(row=2, column=0, padx=5, pady=5, sticky="w")
 
-        self.T1 = tk.Label(self.scrollable_frame)
-        self.T1.place(x=10, y=580)
-        self.T1.config(text="Character :", font=("Courier", 30, "bold"))
+        self.panel3 = tk.Label(self.scrollable_frame, text="", font=small_font)
+        self.panel3.grid(row=2, column=1, padx=5, pady=5, sticky="w")
 
-        self.panel5 = tk.Label(self.scrollable_frame)
-        self.panel5.place(x=260, y=632)
+        self.T3 = tk.Label(self.scrollable_frame, text="Sentence:", font=small_font)
+        self.T3.grid(row=3, column=0, padx=5, pady=5, sticky="w")
 
-        self.T3 = tk.Label(self.scrollable_frame)
-        self.T3.place(x=10, y=632)
-        self.T3.config(text="Sentence :", font=("Courier", 30, "bold"))
+        self.panel5 = tk.Label(self.scrollable_frame, text="", font=small_font)
+        self.panel5.grid(row=3, column=1, padx=5, pady=5, sticky="w")
 
-        self.T4 = tk.Label(self.scrollable_frame)
-        self.T4.place(x=10, y=700)
-        self.T4.config(text="Suggestions :", fg="red", font=("Courier", 30, "bold"))
+        self.T4 = tk.Label(self.scrollable_frame, text="Suggestions:", fg="red", font=small_font)
+        self.T4.grid(row=4, column=0, columnspan=2, padx=5, pady=5, sticky="w")
 
-        self.b1 = tk.Button(self.scrollable_frame)
-        self.b1.place(x=390, y=700)
+        self.b1 = tk.Button(self.scrollable_frame, text="", font=button_font, wraplength=300, command=self.action1)
+        self.b1.grid(row=5, column=0, padx=5, pady=5, sticky="w")
 
-        self.b2 = tk.Button(self.scrollable_frame)
-        self.b2.place(x=590, y=700)
+        self.b2 = tk.Button(self.scrollable_frame, text="", font=button_font, wraplength=300, command=self.action2)
+        self.b2.grid(row=5, column=1, padx=5, pady=5, sticky="w")
 
-        self.b3 = tk.Button(self.scrollable_frame)
-        self.b3.place(x=790, y=700)
+        self.b3 = tk.Button(self.scrollable_frame, text="", font=button_font, wraplength=300, command=self.action3)
+        self.b3.grid(row=6, column=0, padx=5, pady=5, sticky="w")
 
-        self.b4 = tk.Button(self.scrollable_frame)
-        self.b4.place(x=990, y=700)
+        self.b4 = tk.Button(self.scrollable_frame, text="", font=button_font, wraplength=300, command=self.action4)
+        self.b4.grid(row=6, column=1, padx=5, pady=5, sticky="w")
 
-        self.speak = tk.Button(self.scrollable_frame)
-        self.speak.place(x=1305, y=630)
-        self.speak.config(text="Speak", font=("Courier", 20), wraplength=100, command=self.speak_fun)
+        self.speak = tk.Button(self.scrollable_frame, text="Speak", font=button_font, wraplength=80, command=self.speak_fun)
+        self.speak.grid(row=7, column=0, padx=5, pady=5, sticky="w")
 
-        self.clear = tk.Button(self.scrollable_frame)
-        self.clear.place(x=1205, y=630)
-        self.clear.config(text="Clear", font=("Courier", 20), wraplength=100, command=self.clear_fun)
+        self.clear = tk.Button(self.scrollable_frame, text="Clear", font=button_font, wraplength=80, command=self.clear_fun)
+        self.clear.grid(row=7, column=1, padx=5, pady=5, sticky="w")
+
+        # Bind window resize event
+        self.root.bind("<Configure>", self.on_resize)
 
         self.str = " "
         self.ccc = 0
@@ -126,6 +120,19 @@ class Application:
         self.word4 = " "
 
         self.video_loop()
+
+    def update_font_size(self):
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+        font_size = max(8, min(width // 80, height // 50))  # Smaller font size
+
+        self.T.config(font=("Courier", font_size, "bold"))
+        self.T1.config(font=("Courier", font_size, "bold"))
+        self.T3.config(font=("Courier", font_size, "bold"))
+        self.T4.config(font=("Courier", font_size, "bold"))
+
+    def on_resize(self, event):
+        self.update_font_size()
 
     def video_loop(self):
         try:
@@ -207,7 +214,7 @@ class Application:
 
                 self.panel5.config(text=self.str, font=("Courier", 30), wraplength=1025)
         except Exception:
-            print(Exception.__traceback__)
+            print(Exception._traceback_)
 
         self.root.after(1, self.video_loop)
 
@@ -473,7 +480,7 @@ class Application:
 
         # con for [d][pqz]
         fg = 19
-        # print("_________________ch1=",ch1," ch2=",ch2)
+        # print("_ch1=",ch1," ch2=",ch2)
         l = [[5, 0], [3, 4], [3, 0], [3, 1], [3, 5], [5, 5], [5, 4], [5, 1], [7, 6]]
         pl = [ch1, ch2]
         if pl in l:
